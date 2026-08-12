@@ -1,9 +1,4 @@
-'EOF'
-"""
-Vietnamese <-> English Translator — Track 0 build.
-Demonstrates: messages API, system/user prompt design, structured JSON
-output, temperature control, and token-budget-aware conversation history.
-"""
+
 
 import os                                  
 import sys                                 

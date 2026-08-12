@@ -1,7 +1,3 @@
-'EOF'
-"""
-
-"""
 
 import numpy as np
 import voyageai
