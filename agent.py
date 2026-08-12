@@ -1,7 +1,5 @@
 """
-TRACK 0: system prompt design, structured reasoning, context assembly
-TRACK 2: tool/function calling — schema design, call->execute->feed-back loop
-TRACK 3: ReAct agent loop with scratchpad + persisted long-term memory + reflection
+
 """
 
 import os

@@ -1,8 +1,6 @@
 'EOF'
 """
-TRACK 1: Embeddings-based glossary retrieval.
-Converts a small set of tricky terms into vectors once, then finds the
-closest matches to whatever the user said, by MEANING, not exact wording.
+
 """
 
 import numpy as np

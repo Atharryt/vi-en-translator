@@ -1,5 +1,5 @@
 """
-TRACK 2: MCP (Model Context Protocol) server exposing glossary lookup.
+
 """
 
 from mcp.server.fastmcp import FastMCP

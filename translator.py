@@ -5,17 +5,15 @@ Demonstrates: messages API, system/user prompt design, structured JSON
 output, temperature control, and token-budget-aware conversation history.
 """
 
-import os                                  # lets us read the API key from the terminal environment
-import sys                                 # lets us stop the program cleanly with an error code
-from anthropic import Anthropic            # the official Claude SDK — this is what talks to the API
-from pydantic import BaseModel, Field      # used to define the exact shape Claude's reply must match
+import os                                  
+import sys                                 
+from anthropic import Anthropic            
+from pydantic import BaseModel, Field      
 
-MODEL = "claude-sonnet-5"  # which Claude model to call — one place to change if we swap models later
-MAX_HISTORY_TURNS = 6  # keep last N exchanges — real token budgeting, not infinite growth
+MODEL = "claude-sonnet-5"  
+MAX_HISTORY_TURNS = 6  
 
-# SYSTEM_PROMPT is Claude's permanent "job description" — sent on every call, never shown to the user.
-# The two "Input/Output" examples inside it are few-shot examples: showing the model what a good
-# answer looks like works better than just describing the task in words.
+
 SYSTEM_PROMPT = """You are a professional Vietnamese-English interpreter.
 
 Rules:
@@ -33,8 +31,7 @@ Input: "Where's the nearest bus stop?"
 Output: source_lang=en, translation="Tram xe buyt gan nhat o dau?", notes=""
 """
 
-# This class is a schema, not a function — it forces Claude's reply into exactly these 4 fields,
-# so we never have to guess-parse free text. Each Field's description is sent to Claude too.
+
 class Translation(BaseModel):
     source_lang: str = Field(description="'vi' or 'en' — detected source language")
     target_lang: str = Field(description="'vi' or 'en' — the language translated into")
@@ -44,55 +41,55 @@ class Translation(BaseModel):
 
 def trim_history(history):
     """Keep only the last N turns so the context window doesn't grow forever."""
-    max_entries = MAX_HISTORY_TURNS * 2  # each turn = 1 user + 1 assistant entry
-    return history[-max_entries:]        # Python slicing: keep only the last max_entries items
+    max_entries = MAX_HISTORY_TURNS * 2  
+    return history[-max_entries:]        
 
 
 def translate(client, history, text):
-    messages = history + [{"role": "user", "content": text}]  # past turns + the new thing user typed
+    messages = history + [{"role": "user", "content": text}]  
     response = client.messages.parse(
         model=MODEL,
-        max_tokens=1024,           # hard ceiling on reply length, so it can't run away in size/cost
-        system=SYSTEM_PROMPT,      # the instructions/rules block defined above
-        messages=messages,         # the conversation itself
-        output_format=Translation, # forces the reply to match our schema and returns it as a Python object
+        max_tokens=1024,           
+        system=SYSTEM_PROMPT,      
+        messages=messages,        
+        output_format=Translation, 
     )
-    return response.parsed_output  # the already-validated Translation object — no manual parsing needed
+    return response.parsed_output  
 
 
 def main():
-    api_key = os.environ.get("ANTHROPIC_API_KEY")  # read the key from the terminal, never hardcode it here
+    api_key = os.environ.get("ANTHROPIC_API_KEY")  
     if not api_key:
         print("Error: ANTHROPIC_API_KEY not set. Run: export ANTHROPIC_API_KEY=your-key")
-        sys.exit(1)  # 1 means "exited due to an error", as opposed to 0 for success
+        sys.exit(1)  
 
-    client = Anthropic(api_key=api_key)  # one authenticated connection, reused for every call below
-    history = []                         # starts empty, grows as the conversation continues
+    client = Anthropic(api_key=api_key)  
+    history = []                         
 
     print("VI <-> EN Translator — type 'quit' to exit\n")
-    while True:                          # loop forever until the user explicitly quits
-        text = input("> ").strip()       # .strip() removes stray leading/trailing spaces or newline
+    while True:                         
+        text = input("> ").strip()       
 
         if text.lower() in ("quit", "exit"):
-            break                        # leaves the while loop, program ends normally
+            break                        
 
         if not text:
-            continue                     # user hit Enter with nothing typed — skip back and ask again
+            continue                     
 
         try:
-            result = translate(client, history, text)  # call the function defined above
+            result = translate(client, history, text)  
         except Exception as e:
-            print(f"[Error] {e}")        # print what went wrong instead of crashing the whole program
-            continue                     # go back and let the user try again
+            print(f"[Error] {e}")        
+            continue                    
 
         print(f"  [{result.source_lang} -> {result.target_lang}] {result.translation}")
-        if result.notes:                 # only print the notes line if Claude actually gave one
+        if result.notes:                 
             print(f"  note: {result.notes}")
 
-        history.append({"role": "user", "content": text})                       # save what the user said
-        history.append({"role": "assistant", "content": result.model_dump_json()})  # save Claude's reply
-        history = trim_history(history)  # immediately shrink history back down to the last N turns
+        history.append({"role": "user", "content": text})                      
+        history.append({"role": "assistant", "content": result.model_dump_json()})  
+        history = trim_history(history)  
 
 
-if __name__ == "__main__":  # only run main() when this file is executed directly, not when imported
+if __name__ == "__main__":  
     main()
